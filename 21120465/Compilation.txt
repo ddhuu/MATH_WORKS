@@ -1,0 +1,739 @@
+%tinh sai so tuyet doi, sai so tuong doi
+function [aEp, rEp] = saiso(p_e, p_a)
+    aEp = abs(p_e - p_a);
+    rEp = abs((p_e - p_a)/p_e);
+end
+
+
+%tinh sai so cho bieu thuc 3 bien
+function [aEy, rEy] = saisobieuthuc(y, x1_a, x2_a, x3_a, aEx1, aEx2, aEx3)
+    syms x1 x2 x3;
+    y_a = subs(y, [x1 x2 x3], [x1_a x2_a x3_a]);
+    dy1 = diff(y, x1);
+    dy2 = diff(y, x2);
+    dy3 = diff(y, x3);
+    
+    dy1_a = subs(dy1, [x1 x2 x3], [x1_a x2_a x3_a]);
+    dy2_a = subs(dy2, [x1 x2 x3], [x1_a x2_a x3_a]);
+    dy3_a = subs(dy3, [x1 x2 x3], [x1_a x2_a x3_a]);
+    
+    aEy = double(abs(dy1_a)*aEx1 + abs(dy2_a)*aEx2 + abs(dy3_a)*aEx3);
+    rEy = double(aEy/abs(y_a));
+end
+
+
+
+%phuong phap chia doi
+function [x fx] = chiadoi(f, a, b, Df)
+    k=1;
+    while true
+        c=(a+b)/2;
+        fc=f(c);
+        rEc=abs((a - c)/a);
+        disp([k c fc]);
+        plot(k,fc,'ro');
+	hold on;
+        if abs(fc) < Df
+            break
+        end
+        
+        if f(a)*f(c)>0
+            a=c;
+        else 
+            b=c;
+        end
+        k=k+1;
+    end
+    x = c;
+    fx = fc;
+    hold off;
+end
+
+
+%phuong phap lap
+function [x fx] = lap(f, phi, x0, Df)
+    k=1;
+    while true
+        xn = phi(x0)
+        fxn = f(xn);
+        rEx=abs((xn - x0)/x0);
+        disp([k xn fxn]);
+        plot(k,fxn,'ro');
+        hold on;
+        if abs(fxn) < Df
+            break;
+        end
+        x0 = xn;
+        k=k+1;
+    end
+    x = xn;
+    fx = fxn;
+    hold off;
+end
+
+
+%phuong phap tiep tuyen
+function [xx fx] = tieptuyen(f, x0, Df)
+    k=1;
+    syms x;
+    df = diff(f,x);
+    while true
+        xn = x0 - subs(f, x, x0)/subs(df, x, x0);
+        xn = double(xn);
+        fxn = double(subs(f, x, xn));
+        rEx=abs((xn - x0)/x0);
+        disp([k xn fxn]);
+        plot(k,fxn,'ro');
+        hold on;
+        if abs(fxn) < Df
+            break;
+        end
+        x0 = xn;
+        k=k+1;
+    end
+    xx = xn;
+    fx = fxn;
+    hold off;
+end
+
+
+
+%phuong phap day cung
+function [x fx] = daycung(f, a, b, Df)
+    k=1;
+    while true
+        c = a - f(a)*(b-a)/(f(b)-f(a));
+        c = double(c);
+        fc = f(c);
+        rEx=abs((c - a)/a);
+        disp([k c fc]);
+        plot(k,fc,'ro');
+        hold on;
+        if abs(fc) < Df
+            break;
+        end
+        
+        if f(a)*f(c) > 0
+            a = c;
+        else
+            b = c;
+        end
+        k=k+1;
+    end
+    x = c;
+    fx = fc;
+    hold off;
+end
+
+
+%phuong phap lap: giai he phuong trinh 3 an
+function [X] = lap3(A, C, Df)
+    B = -A./[diag(A) diag(A) diag(A)] + eye(3);
+    G = C./diag(A);
+    k = 1
+    X0 = G;
+    Xn = X0;
+    while true
+        Xn = B* X0 + G
+        fX = norm(A*Xn - C)
+        rEx = norm((Xn - X0)./X0)
+        if abs(fX) <= Df
+            break 
+        end
+        X0 = Xn;
+        k = k+1
+    end
+    X = Xn;
+end
+
+
+%phuong phap lap: giai he phuong trinh 5 an
+function [X] = lap5(A, C, Df)
+    B = -A./[diag(A) diag(A) diag(A) diag(A) diag(A)] + eye(5);
+    G = C./diag(A);
+    k = 1
+    X0 = G;
+    Xn = X0;
+    while true
+        Xn = B* X0 + G
+        fX = norm(A*Xn - C)
+        rEx = norm((Xn - X0)./X0)
+        if abs(fX) <= Df
+            break 
+        end
+        X0 = Xn;
+        k = k+1
+    end
+    X = Xn;
+end
+
+
+%phuong phap lap: giai he phuong trinh n an
+function [X] = lapn(A, C, Df)
+    n = length(C);
+    for(i = 1:n)
+        B(:,i) = -A(:,i)./diag(A);
+    end
+    B = B + eye(n);
+    G = C./diag(A);
+    k = 1
+    X0 = G;
+    Xn = X0;
+    while true
+        Xn = B* X0 + G
+        fX = norm(A*Xn - C)
+        rEx = norm((Xn - X0)./X0)
+        if abs(fX) <= Df
+            break 
+        end
+        X0 = Xn;
+        k = k+1
+    end
+    X = Xn;
+end
+
+
+%phuong phap seiden: giai he phuong trinh 3 an
+function [X] = seiden3(A, C, Df)
+    B = -A./[diag(A) diag(A) diag(A)] + eye(3);
+    G = C./diag(A);
+    k = 1
+    X0 = G;
+    Xn = X0;
+    while true
+        Xn(1) = B(1,:)*X0 + G(1);
+        Xn(2) = B(2,1)*Xn(1) + B(2,2)*X0(2) + B(2,3)*X0(3) + G(2);
+        Xn(3) = B(3,1)*Xn(1) + B(3,2)*Xn(2) + B(3,3)*X0(3) + G(3);
+        
+        disp(Xn)
+        rEX = norm((Xn-X0)./X0)
+        fX = norm(A*Xn - C)
+        if abs(fX) <= Df
+            break 
+        end
+        X0 = Xn;
+        k = k+1
+    end
+    X = Xn;
+end
+
+
+
+%phuong phap seiden: giai he phuong trinh 5 an
+function [X] = seiden5(A, C, Df)
+    B = -A./[diag(A) diag(A) diag(A) diag(A) diag(A)] + eye(5);
+    G = C./diag(A);
+    k = 1
+    X0 = G;
+    Xn = X0;
+    while true
+        Xn(1) = B(1,:)*X0 + G(1);
+        Xn(2) = B(2,1)*Xn(1) + B(2,2)*X0(2) + B(2,3)*X0(3) + B(2,4)*X0(4) + B(2,5)*X0(5) + G(2);
+    	Xn(3) = B(3,1)*Xn(1) + B(3,2)*Xn(2) + B(3,3)*X0(3) + B(3,4)*X0(4) + B(3,5)*X0(5) + G(3);
+    	Xn(4) = B(4,1)*Xn(1) + B(4,2)*Xn(2) + B(4,3)*Xn(3) + B(4,4)*X0(4) + B(4,5)*X0(5) + G(4);
+    	Xn(5) = B(5,1)*Xn(1) + B(5,2)*Xn(2) + B(5,3)*Xn(3) + B(5,4)*Xn(4) + B(5,5)*X0(5) + G(5);
+        disp(Xn)
+        rEX = norm((Xn-X0)./X0)
+        fX = norm(A*Xn - C)
+        if abs(fX) <= Df
+            break 
+        end
+        X0 = Xn;
+        k = k+1
+    end
+    X = Xn;
+end
+
+
+%phuong phap seiden: giai he phuong trinh n an
+function [X] = seidenn(A,C,Df)
+    n = length(C)
+    for i = 1:n
+        B(:,i) = -A(:,i)./diag(A);
+    end
+    B = B + eye(n);
+    G = C./diag(A);
+    
+    X0 = G;
+    Xn = X0;
+    k = 0;
+    while true
+        k = k+1
+        Xn(1) = B(1,:) * X0 + G(1);
+        for i = 2:n
+            Xn(i) = B(i,1:i-1)*Xn(1:i-1) + B(i,i:n)*X0(i:n)+G(i);
+        end
+        Xn
+        fX = norm(A * Xn - C)
+        if abs(fX)<=Df
+            break
+        end
+        X0 = Xn;
+    end
+    X = Xn;
+end
+
+
+
+%da thuc tong quat 4 du lieu
+function [yc] = tongquat4(xx,yy,xc)
+    X= [1 xx(1) xx(1)^2 xx(1)^3; 1 xx(2) xx(2)^2 xx(2)^3;
+        1 xx(3) xx(3)^2 xx(3)^3; 1 xx(4) xx(4)^2 xx(4)^3];
+    Y = [yy(1);yy(2);yy(3);yy(4)];
+    A = inv(X)*Y;
+    syms x;
+    P=A(1)+A(2)*x+A(3)*x^2+A(4)*x^3
+    yc=double(subs(P,x,xc));
+    ezplot(P,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+
+%da thuc lagrange 4 du lieu
+function [yc] = lagrange4(xx, yy , xc)
+    syms x;
+    L03 = ((x-xx(2))*(x-xx(3))*(x-xx(4)))/((xx(1)-xx(2))*(xx(1)-xx(3))*(xx(1)-xx(4)));
+    L13 = ((x-xx(1))*(x-xx(3))*(x-xx(4)))/((xx(2)-xx(1))*(xx(2)-xx(3))*(xx(2)-xx(4)));
+    L23 = ((x-xx(1))*(x-xx(2))*(x-xx(4)))/((xx(3)-xx(1))*(xx(3)-xx(2))*(xx(3)-xx(4)));
+    L33 = ((x-xx(1))*(x-xx(2))*(x-xx(3)))/((xx(4)-xx(1))*(xx(4)-xx(2))*(xx(4)-xx(3)));
+    L=L03*yy(1) + L13*yy(2) + L23*yy(3) + L33*yy(4);
+    yc =double(subs(L,x,xc));
+    ezplot(L, [xx(1), xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+
+%da thuc new ton 4 du lieu
+function [yc] = newton4(xx,yy,xc)
+    n1=yy;
+    n2(1)=(n1(2)-n1(1))/(xx(2)-xx(1));
+    n2(2)=(n1(3)-n1(2))/(xx(3)-xx(2));
+    n2(3)=(n1(4)-n1(3))/(xx(4)-xx(3));
+    n3(1)=(n2(2)-n2(1))/(xx(3)-xx(1));
+    n3(2)=(n2(3)-n2(2))/(xx(4)-xx(2));
+    n4(1)=(n3(2)-n3(1))/(xx(4)-xx(1));
+    syms x;
+    N= n1(1) + n2(1)*(x-xx(1)) + n3(1)*(x-xx(1))*(x-xx(2))+ n4(1)*(x-xx(1))*(x-xx(2))*(x-xx(3));
+    yc = double (subs(N,x,xc));
+    ezplot(N,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+
+%da thuc tong quat n du lieu
+function [yc] = tongquatn(xx,yy,xc)
+    n = length(xx);
+    for i = 0:(n-1)
+        X(:,i+1) = (xx').^i;
+    end
+    Y = yy';
+    A=inv(X)*Y;
+    syms x;
+    P=0;
+    for i =1:n
+        P= P+A(i)*x^(i-1);
+    end
+    yc=double(subs(P,x,xc));
+    ezplot(P,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+%da thuc lagrange n du lieu
+function [yc] = lagrangen(xx,yy,xc)
+    n = length(xx);
+    syms x;
+    Lag = 0;
+    for i = 1:n
+        L=1;
+        for j = 1:n
+            if i == j
+                continue
+            end
+            L = L*(x - xx(j))/(xx(i) - xx(j));
+        end
+         Lag = Lag + L*yy(i);
+    end
+    yc=double(subs(Lag,x,xc));
+    ezplot(Lag,[xx(1) xx(end)]);
+    hold on
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+%da thuc newton n du lieu
+function [yc] = newtonn(xx, yy, xc)
+    n = length(xx);
+    N(1,:) = yy';
+    for i = 2:n
+        for j = 1:(n-i+1)
+            N(i,j) = (N(i-1,j+1) - N(i-1,j))/(xx(i+j-1) - xx(j));
+        end
+    end
+    syms x;
+    Newton = N(1,1);
+    X = 1;
+    for i = 2:n
+        X = X * (x-xx(i-1));
+        Newton = Newton + N(i,1)*X;
+    end
+    yc = double(subs(Newton,x,xc));
+    ezplot(Newton,[xx(1) xx(end)]);
+    hold on
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+
+%da thuc spline 4 du lieu
+function [y1, y2, y3] = spline(xx, yy, x1, x2, x3)
+    h  = xx(2:end) - xx(1:end-1);
+    VT=[1, 0, 0, 0; h(1)/6, (h(1)+h(2))/3, h(2)/6, 0 ;0 h(2)/6, (h(2)+h(3))/3, h(3)/6; 0, 0, 0, 1];
+    VP=[0; (yy(3)-yy(2))/h(2) - (yy(2)-yy(1))/h(1);(yy(4)-yy(3))/h(3) - (yy(3)-yy(2))/h(2); 0];
+    m=inv(VT)*VP;
+    M=yy(1:end-1)-m(1:end-1).*h(1:end).^2/6;
+    N=yy(2:end)-m(2:end).*h(1:end).^2/6;
+    
+    syms x;
+    S1=m(2)*(x-xx(1))^3/6/h(1) + m(1)*(xx(2)-x)^3/6/h(1)+ M(1)*(xx(2)-x)/h(1)+ N(1)*(x-xx(1))/h(1);
+    S2=m(3)*(x-xx(2))^3/6/h(2) + m(2)*(xx(3)-x)^3/6/h(2)+ M(2)*(xx(3)-x)/h(2)+ N(2)*(x-xx(2))/h(2);
+    S3=m(4)*(x-xx(3))^3/6/h(3) + m(3)*(xx(4)-x)^3/6/h(3)+ M(3)*(xx(4)-x)/h(3)+ N(3)*(x-xx(3))/h(3);
+    
+    y1=double(subs(S1,x,x1));
+    y1=double(subs(S2,x,x2));
+    y2=double(subs(S3,x,x3));
+    
+    plot(xx,yy,'bo');
+    hold on; 
+    ezplot(S1,[xx(1) xx(2)]);
+    ezplot(S2,[xx(2) xx(3)]);
+    ezplot(S3,[xx(3) xx(4)]);
+    hold off;
+end
+
+
+%Binh phuong nho nhat ax+b
+function [yc] = bpnn_axb(xx, yy, xc)
+    N=length(xx);
+    X= sum(xx);
+    Y= sum(yy);
+    XX= sum(xx.*xx);
+    XY= sum(xx.*yy);
+    syms a b;
+    [a,b]=solve(XX*a + X*b == XY, X*a + N*b == Y);
+    syms x;
+    R=a*x+b;
+    yc = double(subs(R,x,xc));
+    ezplot(R,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+%Binh phuong nho nhat ae^bx
+function [yc] = bpnn_aebx(xx, yy, xc)
+    N=length(xx);
+    X= sum(xx);
+    lY= sum(log(yy));
+    XX= sum(xx.*xx);
+    XlY= sum(xx.*log(yy));
+    syms A B;
+    [A,B]=solve(XX*A + X*B == XlY, X*A + N*B == lY);
+    syms x;
+    R=exp(B)*exp(A*x);
+    yc=double(subs(R,x,xc));
+    ezplot(R,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+
+%binh phuong nho nhat ax^2 + b
+function [yc] = bpnn_ax2b(xx, yy, xc)
+    syms a b;
+    s = sum((yy - (a*(xx).^2 + b)).^2);
+    da = diff(s,a);
+    db = diff(s,b);
+    [a b] = solve( da==0 , db ==0);
+    syms x;
+    R=a*x^2+b;
+    yc = double(subs(R,x,xc));
+    ezplot(R,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+%Binh phuong nho nhat ax^2 + bx + c
+function [yc] = bpnn_ax2bxc(xx, yy, xc)
+    syms a b c;
+    s = sum((yy - (a*(xx).^2 + b*xx + c)).^2);
+    da = diff(s,a);
+    db = diff(s,b);
+    dc = diff(s,c);
+    [a b c] = solve( da == 0 , db == 0, dc == 0);
+    syms x;
+    R= a*x^2 + b*x + c;
+    yc = double(subs(R,x,xc));
+    ezplot(R,[xx(1) xx(end)]);
+    hold on;
+    plot(xx,yy,'bo');
+    hold off;
+end
+
+
+
+
+%sai phan tien, sai phan lui
+function [] = SPT_SPL(xx, yy, x0, df)
+    for i = 1:length(xx)
+        if xx(i) == x0
+            break;
+        end
+    end
+    
+    if(i<length(xx))
+        df_SPT = (yy(i+1)-yy(i))/(xx(i+1) - xx(i))
+        rEdf_SPT = abs((df_SPT-df)/df)
+    end
+    
+    if(i > 1)
+        df_SPL = (yy(i) - yy(i-1))/(xx(i) - xx(i-1))
+        rEdf_SPL = abs((df_SPL - df)/df)
+    end
+end
+
+
+%phuong phap 3 diem
+function [] = PP3D(xx,yy,x0,df)
+     for i = 1:length(xx)
+        if xx(i) == x0
+            break;
+        end
+    end
+    
+    if(i<=length(xx)-2)
+        df_3DC = (-3*yy(i)+4*yy(i+1)-yy(i+2))/(xx(i+2) - xx(i))
+        rEdf_3DC= abs((df_3DC-df)/df)
+    end
+    
+    if(i>1 && i<=length(xx)-1)
+        df_3DG = (yy(i+1) - yy(i-1))/(xx(i+1) - xx(i-1))
+        rEdf_3DG = abs((df_3DG - df)/df)
+    end
+end
+
+
+
+
+%phuong phap hinh thang
+function [I] = hinhthang(xx, yy)
+    n = length(xx);
+    I = 0;
+    for i = 1:n-1
+        I = I + (xx(i+1) - xx(i))*(yy(i+1) + yy(i))/2;
+    end
+    I = double(I);
+end
+
+
+
+
+%phuong phap simson 1/3
+function [I] = simson13(xx, yy)
+    n = length(xx);
+    I = 0;
+    for i = 1:2:n-2
+        I = I + (xx(i+2) - xx(i))*(yy(i+2) + 4*yy(i+1) + yy(i))/6;
+    end
+    I = double(I);
+end
+
+
+
+%phuong phap simson 3/8
+function [I] = simson38(xx, yy)
+    n = length(xx);
+    I = 0;
+    for i = 1:3:n-3
+        I = I + (xx(i+3) - xx(i)) * (yy(i)+3*yy(i+1)+3*yy(i+2)+yy(i+3))/8;
+    end
+    I = double(I);
+end
+
+
+
+
+%phuong phap newton - cotes
+%tinh Hkn
+function [hk] = Hkn(n, k, g)
+    syms t;
+    hk = (((-1)^(n - k))*nchoosek(n,k)/(n*factorial(n)))*int(g,t,0,n);
+end
+
+
+function [I] = newtoncotes(xx,yy,n)
+    len = length(xx);
+    syms t;
+    f = t;
+    I = 0;
+    for i = 1:n
+        f = f*(t - i);
+    end
+    
+    for i = 1:n:len-n
+        sum = 0;
+        for k = 0:n
+            g = f/(t - k);
+            Hi = Hkn(n,k,g);
+            sum = sum + Hi*yy(k+i);
+        end
+        I = I + sum * (xx(i+n) - xx(i));
+    end
+    I = double(I);
+end
+
+
+
+%phuong phap gauss 2 diem nut
+function [I1] = gauss2(f, t, a, b)
+    I = int(f,t,a,b);
+    w1 = 1; x1=-0.5774; t1 = x1*(b-a)/2 + (b+a)/2;
+    w2 = 1; x2= 0.5774; t2 = x2*(b-a)/2 + (b+a)/2;
+    I1 = (b-a)/2*(w1*subs(f,t,t1) + w2*subs(f,t,t2));
+    rEI = abs((I-I1)/I);
+    I1 = double(I1);
+end
+
+
+
+%phuong phap gauss 3 diem nut
+function [I1] = gauss3(f, t, a, b)
+    I = int(f,t,a,b);
+    w1 = 0.5556; x1=-0.7746; t1 = x1*(b-a)/2 + (b+a)/2;
+    w2 = 0.8889; x2= 0; t2 = x2*(b-a)/2 + (b+a)/2;
+    w3 = 0.5556; x3= 0.7746; t3 = x3*(b-a)/2 + (b+a)/2;
+    I1 = (b-a)/2*(w1*subs(f,t,t1) + w2*subs(f,t,t2) + w3*subs(f,t,t3));
+    rEI = abs((I-I1)/I);
+    I1 = double(I1);
+end
+
+
+
+%phuong phap gauss 4 diem nut
+function [I1] = gauss4(f, t, a, b)
+    I = int(f,t,a,b);
+    w1 = 0.3479; x1 = -0.8611; t1 = x1*(b-a)/2 + (a+b)/2;
+    w2 = 0.6521; x2 = -0.3340; t2 = x2*(b-a)/2 + (a+b)/2;
+    w3 = 0.6521; x3 = 0.3340; t3 = x3*(b-a)/2 + (a+b)/2;
+    w4 = 0.3479; x4 = 0.8611; t4 = x4*(b-a)/2 + (a+b)/2;
+    I1 = w1*subs(f,t,t1) + w2*subs(f,t,t2) + w3*subs(f,t,t3) + w4*subs(f,t,t4);
+    rEI = abs((I-I1)/I);
+    I1 = double(I1);
+end
+
+
+
+%giai phuong trinh vi phan bang pp lap
+function [] = lap(f,a,b,y0,Dy)
+    syms x y;
+    x0 = a;
+    yo = y0;
+    k = 1;
+    while true
+        yn = y0 + int(subs(f,y,yo),x,x0,x)
+        rEyn=double(abs(int(yn-yo,x,a,b)/int(yo,x,a,b)))
+        if rEyn <= Dy
+            break
+        end
+        yo = yn;
+        k = k+1
+    end
+end
+
+
+%giai pt vi phan bang pp euler
+function [] = euler(f,a,b,y0)
+    xx = a:0.1:b;
+    yy = 0*xx;
+    yy(1) = y0
+    for i = 1:length(yy)-1
+        yy(i+1) = yy(i) + (xx(i+1)-xx(i))*f(xx(i),yy(i))
+    end
+end
+%main
+f = @(x, y) x+y;
+a = 0;
+b = 0.4;
+y0 = 1;
+euler(f,a,b,y0)
+
+
+
+%giai pt vi phan bang phuong phap euler cai tien
+function [] = eulercaitien(f,a,b,y0)
+    xx = a:0.1:b;
+    yy = 0*xx;
+    yy(1) = y0
+    for i = 1:length(yy)-1
+        yy(i+1) = yy(i) + (xx(i+1)-xx(i))*f(xx(i),yy(i));
+        yy(i+1) = yy(i) + (xx(i+1)-xx(i))*(f(xx(i),yy(i)) + f(xx(i+1),yy(i+1)))/2
+    end
+end
+
+
+
+
+%giai pt vi phan bang pp runge-kutta bac 2
+function [] = rungekutta2(f,a,b,y0)
+    xx = a:0.1:b;
+    yy = 0*xx;
+    h = xx(2:end) - xx(1:end-1);
+    yy(1) = y0
+    for i = 1:length(yy)-1
+        k1 = h(i) * f(xx(i),yy(i));
+        k2 = h(i) * f(xx(i+1),yy(i)+k1);
+        yy(i+1) = yy(i) + (k1+k2)/2
+    end
+end
+
+
+
+
+%giai pt vi phan bang pp runge-kutta bac 3
+function [] = rungekutta3(f,a,b,y0)
+    xx = a:0.1:b;
+    yy = 0*xx;
+    h = xx(2:end) - xx(1:end-1);
+    yy(1) = y0
+    for i = 1:length(yy)-1
+        k1 = h(i) * f(xx(i),yy(i));
+        k2 = h(i) * f(xx(i)+h(i)/2,yy(i)+k1/2);
+        k3 = h(i) * f(xx(i)+h(i),yy(i)-k1+2*k2);
+        yy(i+1) = yy(i) + (k1+4*k2+k3)/6
+    end
+end
+
+%demon
+f = @(x, y) x+y;
+a = 0;
+b = 0.4;
+y0 = 1;
+rungekutta3(f,a,b,y0)
